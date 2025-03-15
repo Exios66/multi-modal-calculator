@@ -1,4 +1,3 @@
-```python
 import numpy as np
 import matplotlib.pyplot as plt
 from mne.time_frequency import tfr_multitaper
@@ -15,12 +14,15 @@ n_samples = 1000
 n_epochs = 50
 sfreq = 500  # Sampling frequency
 data = np.random.randn(n_epochs, n_channels, n_samples)
-```
 
----
+# Simulate class labels for demonstration (0 or 1)
+labels = np.random.randint(0, 2, n_epochs)
 
+### **1. Data Preprocessing**
+# In a real scenario, you would apply filtering, artifact removal, etc.
+# For this example, we'll just normalize the data
+data = (data - np.mean(data)) / np.std(data)
 ### **2. Time-Frequency ERDS Map Generation**
-```python
 # Create MNE Epochs object
 info = create_info(ch_names=[f'EEG{i}' for i in range(n_channels)], sfreq=sfreq, ch_types='eeg')
 epochs = EpochsArray(data, info)
@@ -38,14 +40,9 @@ plt.imshow(tfr_data, aspect='auto', origin='lower',
 plt.colorbar(label='Power Change (%)')
 plt.xlabel('Time (s)')
 plt.ylabel('Frequency (Hz)')
-plt.title(f'Time-Frequency ERDS Map for Channel {channel_idx}')
+plt.title('Time-Frequency ERDS Map for Channel {}'.format(channel_idx))
 plt.show()
-```
-
----
-
 ### **3. Feature Extraction**
-```python
 features = []
 for epoch in data:
     for channel in epoch:
@@ -65,12 +62,7 @@ for epoch in data:
 # Convert features to numpy array for further processing
 features = np.array(features)
 print("Feature shape:", features.shape)  # Verify dimensions (n_epochs * n_channels x feature_count)
-```
-
----
-
 ### **4. Feature Selection**
-```python
 # Simulated labels for binary classification (e.g., workload levels)
 labels = np.random.randint(0, 2, size=(features.shape[0]))
 
@@ -84,12 +76,7 @@ X_test_selected = selector.transform(X_test)
 
 selected_features_indices = selector.get_support(indices=True)
 print("Selected feature indices:", selected_features_indices)
-```
-
----
-
 ### **5. Machine Learning Classification**
-```python
 # Train a Random Forest classifier on selected features
 clf = RandomForestClassifier(random_state=42)
 clf.fit(X_train_selected, y_train)
@@ -107,14 +94,8 @@ y_pred = clf.predict(X_test_selected)
 precision = precision_score(y_test, y_pred)
 recall = recall_score(y_test, y_pred)
 f1 = f1_score(y_test, y_pred)
-
-print(f"Precision: {precision}, Recall: {recall}, F1-score: {f1}")
-```
-
----
-
+print("Precision: {}, Recall: {}, F1-score: {}".format(precision, recall, f1))
 ### **6. Statistical Analysis**
-```python
 from scipy.stats import ttest_ind
 
 # Perform paired t-tests to compare conditions (e.g., workload levels based on labels)
@@ -126,6 +107,4 @@ t_statistic, p_value = ttest_ind(condition_1_features[:, selected_features_indic
 
 print("T-statistics:", t_statistic)
 print("P-values:", p_value)
-
 # Cluster-based permutation tests can be implemented using MNE's statistical functions if needed.
-```
