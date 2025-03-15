@@ -1,0 +1,14 @@
+Trial1,5,600,order_error
+Trial1,5,610,order_error
+
+Trial2,6,580,
+Trial2,6,590,
+
+Trial3,4,700,other_error
+Trial3,4,710,other_error
+
+Trial4,7,550,
+Trial4,7,560,
+
+Trial5,5,620,omission
+Trial5,5,630,omission
