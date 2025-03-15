@@ -6,7 +6,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import timedelta
-from feature_engine.creation import MathFeatures, CombineWithReferenceFeature
+from feature_engine.creation import MathFeatures, RelativeFeatures
 from feature_engine.selection import DropFeatures
 import statsmodels.api as sm  # Import statsmodels API
 from sklearn.preprocessing import MinMaxScaler
@@ -180,10 +180,10 @@ def cognitive_workload_pipeline(filepath, output_dir='./output'):
     df = transformer.fit_transform(df)
     
     # Combine each of these with a "reference" of pulse_rate_mean_60
-    reference = CombineWithReferenceFeature(
+    reference = RelativeFeatures(
         variables=['pulse_rate', 'HRV', 'SpO2_change'],
         reference=df['pulse_rate_mean_60'],  # reference Series
-        func=['diff', 'div']
+        func=['division', 'subtraction']
     )
     df = reference.fit_transform(df)
 

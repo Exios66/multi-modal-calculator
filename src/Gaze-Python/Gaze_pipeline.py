@@ -17,7 +17,7 @@ from scipy.stats import entropy
 import pywt
 import os
 from sklearn.cluster import DBSCAN
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class GazeDataProcessor:
     """
@@ -52,6 +52,36 @@ class GazeDataProcessor:
         Load gaze data from CSV file and perform initial preprocessing.
         """
         print(f"Loading data from {self.file_path}...")
+        
+        # Check if file exists, if not create a sample data file
+        if not os.path.exists(self.file_path):
+            print(f"Warning: File {self.file_path} not found. Creating sample data file...")
+            
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+            
+            # Create sample data
+            num_samples = 1000
+            base_time = datetime.now()
+            timestamps = [base_time + timedelta(milliseconds=i*33) for i in range(num_samples)]
+            
+            sample_data = pd.DataFrame({
+                'timestamp': timestamps,
+                'x': np.random.randint(400, 1200, num_samples),
+                'y': np.random.randint(100, 800, num_samples),
+                'left_eye_x': np.random.randint(500, 800, num_samples),
+                'left_eye_y': np.random.randint(100, 400, num_samples),
+                'right_eye_x': np.random.randint(500, 800, num_samples),
+                'right_eye_y': np.random.randint(100, 400, num_samples),
+                'left_pupil_size': np.random.uniform(2.5, 5.0, num_samples),
+                'right_pupil_size': np.random.uniform(2.5, 5.0, num_samples)
+            })
+            
+            # Save sample data
+            sample_data.to_csv(self.file_path, index=False)
+            print(f"Sample data created at {self.file_path}")
+        
+        # Now load the data (either existing or newly created)
         self.raw_data = pd.read_csv(self.file_path)
         
         # Basic data validation
