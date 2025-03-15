@@ -1,0 +1,13 @@
+trial,condition,stimulus,response,correct,reaction_time,target
+1,1-back,A,yes,1,500,1
+2,1-back,B,no,0,520,0
+3,2-back,C,yes,1,600,1
+4,2-back,D,no,0,610,0
+5,1-back,E,yes,1,490,1
+6,2-back,F,yes,1,630,1
+7,3-back,G,no,0,700,0
+8,3-back,H,yes,1,710,1
+9,1-back,I,no,0,540,0
+10,2-back,J,yes,1,650,1
+11,3-back,K,yes,1,720,1
+12,3-back,L,no,0,730,0
