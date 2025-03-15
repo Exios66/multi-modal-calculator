@@ -8,11 +8,7 @@ import os
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from generate_report import cognitive_workload_pipeline, generate_clinical_report
-
-# Create a directory for output files
-output_dir = './output'
-os.makedirs(output_dir, exist_ok=True)
+from generate_report import cognitive_workload_pipeline, generate_clinical_report, create_timestamped_output_dir
 
 # Create a sample dataset for testing
 def create_sample_data(n_samples=500):
@@ -74,6 +70,9 @@ def create_sample_data(n_samples=500):
 print("Creating sample physiological data...")
 sample_data = create_sample_data(n_samples=500)
 
+# Create a timestamped output directory
+output_dir = create_timestamped_output_dir()
+
 # Save sample data to CSV
 sample_data_path = os.path.join(output_dir, 'sample_physiological_data.csv')
 sample_data.to_csv(sample_data_path, index=False)
@@ -88,4 +87,5 @@ report_path = os.path.join(output_dir, 'clinical_report.md')
 print(f"\nGenerating clinical report to {report_path}...")
 generate_clinical_report(report, processed_df, report_path)
 
-print("\nDone! Check the output directory for results.") 
+print("\nDone! Check the output directory for results.")
+print(f"Output directory: {output_dir}") 
