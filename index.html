@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Modal Calculator Repository Viewer</title>
+  <style>
+    /* Modern CSS reset and variables */
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2c3e50;
+      --bg-light: #f8f9fa;
+      --bg-dark: #343a40;
+      --border-color: #dee2e6;
+      --hover-color: #e9ecef;
+      --code-bg: #f6f8fa;
+      --text-color: #212529;
+      --text-light: #6c757d;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--bg-light);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    /* Header styling */
+    header {
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      height: 60px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    header h1 {
+      font-size: 1.5rem;
+      margin-right: auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .search-bar {
+      margin-left: 1rem;
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+    }
+    
+    .search-bar input {
+      background: transparent;
+      border: none;
+      color: white;
+      padding: 0.25rem;
+      outline: none;
+      width: 200px;
+    }
+    
+    .search-bar input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Main layout */
+    .container {
+      display: flex;
+      margin-top: 60px;
+      height: calc(100vh - 60px);
+      width: 100%;
+    }
+    
+    #sidebar {
+      width: 300px;
+      background: white;
+      overflow-y: auto;
+      border-right: 1px solid var(--border-color);
+      transition: width 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    #sidebar.collapsed {
+      width: 60px;
+    }
+    
+    #main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    #content {
+      flex-grow: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      background-color: white;
+    }
+    
+    /* File tree styling */
+    .tree-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 600;
+    }
+    
+    .toggle-sidebar {
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: var(--text-color);
+      font-size: 1.25rem;
+    }
+    
+    #fileTree {
+      padding: 0.5rem 0;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    
+    ul.tree {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    
+    ul.tree ul {
+      list-style-type: none;
+      padding-left: 1.5rem;
+    }
+    
+    ul.tree li {
+      padding: 0.25rem 0.5rem;
+      margin: 0.1rem 0;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    ul.tree li:hover {
+      background-color: var(--hover-color);
+    }
+    
+    li.folder {
+      font-weight: 500;
+    }
+    
+    li.folder > span:before {
+      content: "📁 ";
+    }
+    
+    li.folder.open > span:before {
+      content: "📂 ";
+    }
+    
+    li.file > span:before {
+      content: "📄 ";
+    }
+    
+    li.active {
+      background-color: var(--hover-color);
+      font-weight: bold;
+    }
+    
+    .icon {
+      margin-right: 0.5rem;
+      width: 16px;
+      text-align: center;
+    }
+    
+    /* File content styling */
+    .file-header {
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      background-color: var(--bg-light);
+    }
+    
+    .file-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .file-path {
+      color: var(--text-light);
+      margin-left: 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .file-actions {
+      margin-left: auto;
+    }
+    
+    .file-actions button {
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      margin-left: 0.5rem;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+    
+    .file-actions button:hover {
+      background-color: var(--hover-color);
+    }
+    
+    /* Code viewer styling */
+    pre {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+      tab-size: 4;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    
+    /* Analysis panel styling */
+    #analysis {
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      background: white;
+      font-size: 0.875rem;
+    }
+    
+    #analysis h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    #analysis p {
+      margin: 0.25rem 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    #analysis .stat-value {
+      font-weight: 600;
+    }
+    
+    /* Modal components */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .modal-header h3 {
+      margin: 0;
+    }
+    
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-light);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      #sidebar {
+        width: 240px;
+      }
+      
+      header h1 {
+        font-size: 1.25rem;
+      }
+      
+      .search-bar input {
+        width: 150px;
+      }
+    }
+    
+    /* Syntax highlighting */
+    .hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-name, .hljs-tag {
+      color: #d73a49;
+    }
+    
+    .hljs-string, .hljs-title, .hljs-section, .hljs-attribute, .hljs-literal, .hljs-template-tag, .hljs-template-variable, .hljs-type, .hljs-addition {
+      color: #22863a;
+    }
+    
+    .hljs-comment, .hljs-quote, .hljs-deletion, .hljs-meta {
+      color: #6a737d;
+    }
+    
+    .hljs-number, .hljs-regexp, .hljs-symbol, .hljs-variable, .hljs-template-variable, .hljs-link, .hljs-selector-attr, .hljs-selector-pseudo {
+      color: #005cc5;
+    }
+    
+    .dark-theme .hljs-keyword, .dark-theme .hljs-selector-tag, .dark-theme .hljs-built_in, .dark-theme .hljs-name, .dark-theme .hljs-tag {
+      color: #ff7b72;
+    }
+    
+    .dark-theme .hljs-string, .dark-theme .hljs-title, .dark-theme .hljs-section, .dark-theme .hljs-attribute, .dark-theme .hljs-literal, .dark-theme .hljs-template-tag, .dark-theme .hljs-template-variable, .dark-theme .hljs-type, .dark-theme .hljs-addition {
+      color: #7ee787;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Multi-Modal Calculator</h1>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search files...">
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="sidebar">
+      <div class="tree-header">
+        <span>Repository Files</span>
+        <button class="toggle-sidebar" id="toggleSidebar">≡</button>
+      </div>
+      <div id="fileTree"></div>
+      <div id="analysis">
+        <h3>Repository Analysis</h3>
+        <p id="analysisStats">Loading analysis...</p>
+      </div>
+    </div>
+
+    <div id="main-content">
+      <div class="file-header">
+        <h2 id="fileTitle">Welcome</h2>
+        <span class="file-path" id="filePath"></span>
+        <div class="file-actions">
+          <button id="infoButton">Info</button>
+        </div>
+      </div>
+      <div id="content">
+        <h3>Multi-Modal Calculator Repository</h3>
+        <p>Select a file from the tree to view its content.</p>
+        <p>This repository contains code for a calculator application that supports multiple input and output modalities, including:</p>
+        <ul>
+          <li>Text-based input and output</li>
+          <li>Voice recognition and synthesis</li>
+          <li>Image-based calculation (OCR)</li>
+          <li>Advanced mathematical expressions</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Repository Info -->
+  <div class="modal" id="infoModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Repository Information</h3>
+        <button class="close-modal" id="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Name:</strong> multi-modal-calculator</p>
+        <p><strong>Owner:</strong> Exios66</p>
+        <p><strong>Description:</strong> A calculator application that supports multiple input and output modalities including text, voice, and image processing.</p>
+        <p><strong>URL:</strong> <a href="https://github.com/Exios66/multi-modal-calculator" target="_blank">https://github.com/Exios66/multi-modal-calculator</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Define the repository structure
+    const repoStructure = {
+      "name": "multi-modal-calculator",
+      "type": "folder",
+      "children": [
+        {
+          "name": ".gitattributes",
+          "type": "file",
+          "content": "/* Git attributes content placeholder */"
+        },
+        {
+          "name": "LICENSE",
+          "type": "file",
+          "content": "MIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy..."
+        },
+        {
+          "name": "README.md",
+          "type": "file",
+          "content": "# The Multi Modal Calculation Repository\nThis repository is for multi-modal calculation."
+        },
+        {
+          "name": "data",
+          "type": "folder",
+          "children": [
+            {
+              "name": "example-data.csv",
+              "type": "file",
+              "content": "col1,col2\n1,2\n3,4"
+            }
+          ]
+        },
+        {
+          "name": "src",
+          "type": "folder",
+          "children": [
+            {
+              "name": "calculator.py",
+              "type": "file",
+              "content": "# Python calculator script\n\ndef calculate(a, b):\n    return a + b\n\nif __name__ == '__main__':\n    print(calculate(2, 3))"
+            },
+            {
+              "name": "utils.py",
+              "type": "file",
+              "content": "# Utility functions\n\ndef helper():\n    pass"
+            }
+          ]
+        }
+      ]
+    };
+
+    // Toggle sidebar functionality
+    document.getElementById('toggleSidebar').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+
+    // Show repository info modal
+    document.getElementById('infoButton').addEventListener('click', () => {
+      document.getElementById('infoModal').style.display = 'flex';
+    });
+
+    // Close modal functionality
+    document.getElementById('closeModal').addEventListener('click', () => {
+      document.getElementById('infoModal').style.display = 'none';
+    });
+
+    // Render the file tree recursively
+    function renderTree(node, container) {
+      const ul = document.createElement('ul');
+      ul.className = "tree";
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => {
+          const li = document.createElement('li');
+          const span = document.createElement('span');
+          span.textContent = child.name;
+          li.appendChild(span);
+          li.classList.add(child.type);
+          
+          // Click handler for folders and files
+          li.addEventListener('click', function(e) {
+            e.stopPropagation();
+            clearActive();
+            li.classList.add('active');
+            // Toggle folder open/close if folder type
+            if (child.type === 'folder') {
+              li.classList.toggle('open');
+            }
+            // If it's a file, display its content in the main area
+            if (child.type === 'file') {
+              document.getElementById('fileTitle').textContent = child.name;
+              // Display file path by traversing up the DOM tree (optional enhancement)
+              document.getElementById('filePath').textContent = getFilePath(li);
+              document.getElementById('content').innerHTML = '<pre>' + escapeHtml(child.content) + '</pre>';
+            }
+          });
+          
+          // Recursively render if folder has children
+          if (child.type === 'folder' && child.children) {
+            renderTree(child, li);
+          }
+          ul.appendChild(li);
+        });
+      }
+      container.appendChild(ul);
+    }
+
+    // Clear active class from all file tree items
+    function clearActive() {
+      document.querySelectorAll('li.active').forEach(el => el.classList.remove('active'));
+    }
+
+    // Get file path from the clicked element by traversing its parent nodes
+    function getFilePath(element) {
+      let path = [];
+      while (element && element.tagName === "LI") {
+        const name = element.querySelector("span").textContent;
+        path.unshift(name);
+        element = element.parentElement.closest("li");
+      }
+      return path.join("/");
+    }
+
+    // HTML escaping for file content
+    function escapeHtml(text) {
+      var map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    // Analyze repository structure: count files and folders
+    function analyzeStructure(node) {
+      let fileCount = 0;
+      let folderCount = 0;
+      function traverse(n) {
+        if (n.type === 'file') {
+          fileCount++;
+        } else if (n.type === 'folder') {
+          folderCount++;
+          if (n.children && n.children.length > 0) {
+            n.children.forEach(child => traverse(child));
+          }
+        }
+      }
+      traverse(node);
+      return { fileCount, folderCount };
+    }
+
+    // Render the file tree
+    const fileTreeContainer = document.getElementById('fileTree');
+    renderTree(repoStructure, fileTreeContainer);
+
+    // Display repository analysis
+    const analysis = analyzeStructure(repoStructure);
+    document.getElementById('analysisStats').innerHTML =
+      "<span>Total Folders: <strong>" + analysis.folderCount + "</strong></span>" +
+      "<span>Total Files: <strong>" + analysis.fileCount + "</strong></span>";
+
+    // Search functionality: filter file tree based on search input
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const query = this.value.toLowerCase();
+      filterTree(document.getElementById('fileTree'), query);
+    });
+
+    // Recursive function to filter file tree items
+    function filterTree(container, query) {
+      const items = container.getElementsByTagName('li');
+      Array.from(items).forEach(item => {
+        const text = item.querySelector('span').textContent.toLowerCase();
+        if (text.indexOf(query) > -1) {
+          item.style.display = "";
+        } else {
+          item.style.display = "none";
+        }
+      });
+    }
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', function(e) {
+      const modal = document.getElementById('infoModal');
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
