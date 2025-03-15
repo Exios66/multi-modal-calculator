@@ -39,6 +39,7 @@ python test_report.py
 ```
 
 This will:
+
 1. Generate sample physiological data
 2. Create a timestamped directory in the `processed_data` folder (e.g., `processed_data/analysis_2023-03-15_123456`)
 3. Save the sample data to the timestamped directory
@@ -74,6 +75,7 @@ processed_df, report = cognitive_workload_pipeline('path/to/your/data.csv', outp
 ```
 
 Your input data should be a CSV file with at least the following columns:
+
 - `timestamp`: A datetime column
 - `SpO2`: Oxygen saturation percentage
 - `pulse_rate`: Pulse rate in beats per minute
@@ -101,4 +103,4 @@ You can customize the pipeline by modifying the parameters in the `cognitive_wor
 - Modify the feature engineering steps
 - Adjust the clustering parameters
 
-For more advanced customization, you can modify the functions in `generate_report.py` directly. 
+For more advanced customization, you can modify the functions in `generate_report.py` directly.
