@@ -63,7 +63,16 @@ def generate_gaze_tracking_data(num_lines, cwt_spike_freq, start_datetime):
 def main():
     # User inputs
     num_lines = int(input("Enter the number of lines for the dataset: "))
-    cwt_spike_freq = int(input("Enter the frequency of CWT spikes: "))
+    
+    # Handle CWT spike frequency with better error handling
+    while True:
+        cwt_spike_freq_input = input("Enter the frequency of CWT spikes (integer value): ")
+        try:
+            cwt_spike_freq = int(cwt_spike_freq_input)
+            break
+        except ValueError:
+            print("Error: Please enter a valid integer value for CWT spike frequency.")
+    
     start_datetime = input("Enter the start date and time (YYYY-MM-DD HH:MM:SS): ")
 
     # Generate dataset

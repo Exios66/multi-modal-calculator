@@ -11,3 +11,9 @@ trial,condition,stimulus,response,correct,reaction_time,target
 10,2-back,J,yes,1,650,1
 11,3-back,K,yes,1,720,1
 12,3-back,L,no,0,730,0
+13,1-back,M,yes,1,480,1
+14,2-back,N,no,0,620,0
+15,3-back,O,yes,1,700,1
+16,1-back,P,yes,1,490,1
+17,2-back,Q,no,0,610,0
+18,3-back,R,yes,1,710,1

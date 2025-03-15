@@ -5,8 +5,8 @@ import pandas as pd
 from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
-from datetime import timedelta
-from feature_engine.creation import MathFeatures, CombineWithReferenceFeature
+from datetime import timedelta, datetime
+from feature_engine.creation import MathFeatures, RelativeFeatures
 from feature_engine.selection import DropFeatures
 import statsmodels.api as sm  # Import statsmodels API
 from sklearn.preprocessing import MinMaxScaler
@@ -16,7 +16,36 @@ warnings.filterwarnings('ignore')
 sns.set(style="whitegrid")  # Global style for seaborn
 
 
-def cognitive_workload_pipeline(filepath, output_dir='./output'):
+def create_timestamped_output_dir(base_dir='../../processed_data'):
+    """
+    Creates a timestamped output directory within the specified base directory.
+    
+    Parameters
+    ----------
+    base_dir : str, optional
+        Base directory where the timestamped directory will be created.
+        Defaults to '../../processed_data' (relative to the script location).
+        
+    Returns
+    -------
+    str
+        Path to the created timestamped directory.
+    """
+    # Ensure base directory exists
+    os.makedirs(base_dir, exist_ok=True)
+    
+    # Create a timestamp string in format YYYY-MM-DD_HHMMSS
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    
+    # Create the timestamped directory
+    output_dir = os.path.join(base_dir, f'analysis_{timestamp}')
+    os.makedirs(output_dir, exist_ok=True)
+    
+    print(f"[INFO] Created output directory: {output_dir}")
+    return output_dir
+
+
+def cognitive_workload_pipeline(filepath, output_dir=None):
     """
     Comprehensive cognitive workload analysis pipeline for physiological data.
     
@@ -28,7 +57,8 @@ def cognitive_workload_pipeline(filepath, output_dir='./output'):
           - 'SpO2' (float, oxygen saturation %)
           - 'pulse_rate' (float, pulse rate in bpm)
     output_dir : str, optional
-        Directory to save output files. Defaults to './output'.
+        Directory to save output files. If None, a timestamped directory will be created
+        in the processed_data folder. Defaults to None.
         
     Returns
     -------
@@ -55,6 +85,11 @@ def cognitive_workload_pipeline(filepath, output_dir='./output'):
     [9] Subset analysis performed for intervals with high or critical workload.
     [10] This pipeline can be extended or modified for domain-specific thresholds.
     """
+    # Create timestamped output directory if not provided
+    if output_dir is None:
+        output_dir = create_timestamped_output_dir()
+    else:
+        os.makedirs(output_dir, exist_ok=True)
 
     # -----------------------------
     # 1. VALIDATION & DATA INGESTION
@@ -180,10 +215,10 @@ def cognitive_workload_pipeline(filepath, output_dir='./output'):
     df = transformer.fit_transform(df)
     
     # Combine each of these with a "reference" of pulse_rate_mean_60
-    reference = CombineWithReferenceFeature(
+    reference = RelativeFeatures(
         variables=['pulse_rate', 'HRV', 'SpO2_change'],
-        reference=df['pulse_rate_mean_60'],  # reference Series
-        func=['diff', 'div']
+        reference=['pulse_rate_mean_60'],  # reference column name
+        func=['div', 'sub']
     )
     df = reference.fit_transform(df)
 
@@ -196,7 +231,7 @@ def cognitive_workload_pipeline(filepath, output_dir='./output'):
     )
     
     # Drop some ephemeral columns we do not need
-    dropper = DropFeatures(features=[
+    dropper = DropFeatures(features_to_drop=[
         'hour', 
         'minute', 
         'second',
